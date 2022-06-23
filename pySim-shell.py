@@ -23,7 +23,13 @@ import json
 import traceback
 
 import cmd2
-from cmd2 import style, fg, bg
+from cmd2 import style
+# cmd2 >= 2.3.0 has deprecated the bg/fg in favor of Bg/Fg :(
+from packaging import version
+if version.parse(cmd2.__version__) < version.parse("2.3.0"):
+    from cmd2 import fg, bg
+else:
+    from cmd2 import Fg as fg, Bg as bg
 from cmd2 import CommandSet, with_default_category, with_argparser
 import argparse
 
