@@ -28,8 +28,14 @@ from cmd2 import style
 from packaging import version
 if version.parse(cmd2.__version__) < version.parse("2.3.0"):
     from cmd2 import fg, bg
+    RED = fg.red
+    LIGHT_RED = fg.bright_red
+    LIGHT_GREEN = fg.bright_green
 else:
-    from cmd2 import Fg as fg, Bg as bg
+    from cmd2 import Fg, Bg
+    RED = Fg.RED
+    LIGHT_RED = Fg.LIGHT_RED
+    LIGHT_GREEN = Fg.LIGHT_GREEN
 from cmd2 import CommandSet, with_default_category, with_argparser
 import argparse
 
@@ -142,9 +148,13 @@ class PysimApp(cmd2.Cmd):
     CUSTOM_CATEGORY = 'pySim Commands'
 
     def __init__(self, card, rs, sl, ch, script=None):
+        if version.parse(cmd2.__version__) < version.parse("2.0.0"):
+            kwargs = {'use_ipython': True}
+        else:
+            kwargs = {'include_ipy': True}
         super().__init__(persistent_history_file='~/.pysim_shell_history', allow_cli_args=False,
-                         use_ipython=True, auto_load_commands=False, startup_script=script)
-        self.intro = style('Welcome to pySim-shell!', fg=fg.red)
+                         auto_load_commands=False, startup_script=script, *kwargs)
+        self.intro = style('Welcome to pySim-shell!', fg=RED)
         self.default_category = 'pySim-shell built-in commands'
         self.card = None
         self.rs = None
@@ -153,16 +163,15 @@ class PysimApp(cmd2.Cmd):
         self.ch = ch
 
         self.numeric_path = False
-        self.add_settable(cmd2.Settable('numeric_path', bool, 'Print File IDs instead of names',
+        self.add_settable(cmd2.Settable('numeric_path', bool, 'Print File IDs instead of names', self,
                                         onchange_cb=self._onchange_numeric_path))
         self.conserve_write = True
-        self.add_settable(cmd2.Settable('conserve_write', bool, 'Read and compare before write',
+        self.add_settable(cmd2.Settable('conserve_write', bool, 'Read and compare before write', self,
                                         onchange_cb=self._onchange_conserve_write))
         self.json_pretty_print = True
-        self.add_settable(cmd2.Settable('json_pretty_print',
-                          bool, 'Pretty-Print JSON output'))
+        self.add_settable(cmd2.Settable('json_pretty_print', bool, 'Pretty-Print JSON output', self))
         self.apdu_trace = False
-        self.add_settable(cmd2.Settable('apdu_trace', bool, 'Trace and display APDUs exchanged with card',
+        self.add_settable(cmd2.Settable('apdu_trace', bool, 'Trace and display APDUs exchanged with card', self,
                                         onchange_cb=self._onchange_apdu_trace))
 
         self.equip(card, rs)
@@ -294,23 +303,23 @@ class PysimApp(cmd2.Cmd):
             sys.stderr = self._stderr_backup
 
     def _show_failure_sign(self):
-        self.poutput(style("  +-------------+", fg=fg.bright_red))
-        self.poutput(style("  +   ##   ##   +", fg=fg.bright_red))
-        self.poutput(style("  +    ## ##    +", fg=fg.bright_red))
-        self.poutput(style("  +     ###     +", fg=fg.bright_red))
-        self.poutput(style("  +    ## ##    +", fg=fg.bright_red))
-        self.poutput(style("  +   ##   ##   +", fg=fg.bright_red))
-        self.poutput(style("  +-------------+", fg=fg.bright_red))
+        self.poutput(style("  +-------------+", fg=LIGHT_RED))
+        self.poutput(style("  +   ##   ##   +", fg=LIGHT_RED))
+        self.poutput(style("  +    ## ##    +", fg=LIGHT_RED))
+        self.poutput(style("  +     ###     +", fg=LIGHT_RED))
+        self.poutput(style("  +    ## ##    +", fg=LIGHT_RED))
+        self.poutput(style("  +   ##   ##   +", fg=LIGHT_RED))
+        self.poutput(style("  +-------------+", fg=LIGHT_RED))
         self.poutput("")
 
     def _show_success_sign(self):
-        self.poutput(style("  +-------------+", fg=fg.bright_green))
-        self.poutput(style("  +          ## +", fg=fg.bright_green))
-        self.poutput(style("  +         ##  +", fg=fg.bright_green))
-        self.poutput(style("  +  #    ##    +", fg=fg.bright_green))
-        self.poutput(style("  +   ## #      +", fg=fg.bright_green))
-        self.poutput(style("  +    ##       +", fg=fg.bright_green))
-        self.poutput(style("  +-------------+", fg=fg.bright_green))
+        self.poutput(style("  +-------------+", fg=LIGHT_GREEN))
+        self.poutput(style("  +          ## +", fg=LIGHT_GREEN))
+        self.poutput(style("  +         ##  +", fg=LIGHT_GREEN))
+        self.poutput(style("  +  #    ##    +", fg=LIGHT_GREEN))
+        self.poutput(style("  +   ## #      +", fg=LIGHT_GREEN))
+        self.poutput(style("  +    ##       +", fg=LIGHT_GREEN))
+        self.poutput(style("  +-------------+", fg=LIGHT_GREEN))
         self.poutput("")
 
     def _process_card(self, first, script_path):
